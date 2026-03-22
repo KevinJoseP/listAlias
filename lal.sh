@@ -43,13 +43,18 @@ ${stripped#alias }"
     echo "  (no aliases found)"
   else
     local i=0
-    local saved_ifs="$IFS"
-    IFS=$'\n'
-    for entry in $alias_entries; do
+    while IFS= read -r entry; do
       i=$((i + 1))
-      printf "  %2d.  %s\n" "$i" "$entry"
-    done
-    IFS="$saved_ifs"
+      # Clean up display: split into name=value, strip escapes and quotes from value
+      local aname="${entry%%=*}"
+      local aval="${entry#*=}"
+      # Remove surrounding quotes (single or double)
+      aval="${aval%\'}" ; aval="${aval#\'}"
+      aval="${aval%\"}" ; aval="${aval#\"}"
+      # Remove backslash escapes (e.g. cd\ ~/foo -> cd ~/foo)
+      aval="${aval//\\/}"
+      printf "  %2d.  %s = %s\n" "$i" "$aname" "$aval"
+    done <<< "$alias_entries"
   fi
 
   echo ""
